@@ -1,7 +1,7 @@
-import { Dimensions, Platform, PixelRatio } from "react-native";
+import { Dimensions, Platform, PixelRatio, Alert  } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as IntentLauncher from "expo-intent-launcher";
-import aartiMap from "./mappings/aarti-sangrah/map";
+import aartiSangrahMap from "./mappings/aarti-sangrah/map";
 import kakadAartiMap from "./mappings/kakad-aarti/map";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -46,7 +46,7 @@ export const openPDF = async (file, goBack = () => {}) => {
     //   },
     // ]);
   } catch (error) {
-    console.log(err);
+    console.log(error);
     Alert.alert("Error", "Somthing went wrong...", [
       {
         text: "Okay",
@@ -57,7 +57,7 @@ export const openPDF = async (file, goBack = () => {}) => {
 };
 
 export const fileMap = {
-  AARTI_SANGRAH: aartiMap,
+  AARTI_SANGRAH: aartiSangrahMap,
   ASHTAK_PUSTIKA_1: [],
   ASHTAK_PUSTIKA_2: [],
   KAKAD_AARTI: kakadAartiMap,
