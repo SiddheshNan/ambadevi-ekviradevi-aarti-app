@@ -1,4 +1,4 @@
-import { Dimensions, Platform, PixelRatio, Alert  } from "react-native";
+import { Dimensions, Platform, PixelRatio, Alert } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as IntentLauncher from "expo-intent-launcher";
 import aartiSangrahMap from "./mappings/aarti-sangrah/map";
@@ -61,4 +61,22 @@ export const fileMap = {
   ASHTAK_PUSTIKA_1: [],
   ASHTAK_PUSTIKA_2: [],
   KAKAD_AARTI: kakadAartiMap,
+  // ALL: [
+  //   ...aartiSangrahMap.map((item) => {
+  //     return {
+  //       ...item,
+  //       name: `आरती संग्रह - ${item.name}`,
+  //     };
+  //   }),
+  //   ...kakadAartiMap.map((item) => {
+  //     return {
+  //       ...item,
+  //       name: `काकड आरती - ${item.name}`,
+  //     };
+  //   }),
+  // ],
+};
+
+export const hasNumber = (myString) => {
+  return /\d/.test(myString);
 };

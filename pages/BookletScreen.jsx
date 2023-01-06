@@ -1,9 +1,8 @@
 import React from "react";
 import { Text, View, FlatList, KeyboardAvoidingView } from "react-native";
-import { Button, Header as HeaderRNE } from "@rneui/themed";
+import { Button, Header as HeaderRNE, SearchBar } from "@rneui/themed";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { openPDF, normalize, fileMap } from "../utils";
-import { SearchBar } from "@rneui/themed";
+import { openPDF, normalize, fileMap, hasNumber } from "../utils";
 
 const renderItem = ({ item }) => (
   <Button
@@ -16,12 +15,12 @@ const renderItem = ({ item }) => (
     size="lg"
     titleStyle={{
       color: "#f0225e",
-      fontSize: normalize(18.5),
+      fontSize: normalize(18),
     }}
     containerStyle={{
       width: "90%",
       marginHorizontal: 20,
-      marginVertical: 10,
+      marginVertical: 7.5,
       borderRadius: 25,
     }}
     onPress={() => openPDF(item.file)}
@@ -48,53 +47,77 @@ const BookletScreen = ({ route, navigation }) => {
       return;
     }
 
-    const lowerQueryString = queryString.toLowerCase();
+    let lowerQueryString = queryString.toLowerCase().trim();
 
-    const matches = BOOKLET.filter((item) => {
-      if (item.number.indexOf(lowerQueryString) >= 0) return true;
+    const wordsInSearch = lowerQueryString.split(" ");
+    if (wordsInSearch.length && wordsInSearch[wordsInSearch.length - 1] == "")
+      wordsInSearch.pop();
 
-      const splited = lowerQueryString.split(" ");
-      let wordArray = [];
+    // // tokanize the words and get their counts
+    // let wordMap = {};
+    // if (splitedWords.length) {
+    //   for (word of splitedWords) {
+    //     if (word in wordMap) {
+    //       wordMap[word] = wordMap[word] + 1;
+    //     } else {
+    //       wordMap[word] = 1;
+    //     }
+    //   }
+    // } else {
+    //   wordMap[lowerQueryString] = 1;
+    // }
+    // console.log(wordMap)
+    // const words = Object.entries(wordMap)
+    // console.log(words);
 
-      if (splited.length) {
-        wordArray = [...splited];
-        if (wordArray[wordArray.length - 1] == "") wordArray.pop();
-      } else {
-        wordArray.push(lowerQueryString);
+    // it is a aarti number, just return by the index
+    if (hasNumber(lowerQueryString)) {
+      const aartiMatchedByNumber = BOOKLET.filter((item) => {
+        if (item.number.indexOf(lowerQueryString) >= 0) return true;
+      });
+      setItems(aartiMatchedByNumber);
+      return;
+    }
+
+    // do simple text search
+    let filteredAarti = [];
+    for (let aarti of BOOKLET) {
+      let matches = 0;
+      for (let searchText of aarti.search_txt) {
+        if (searchText.includes(lowerQueryString)) matches = matches + 1;
       }
+      if (matches) {
+        aarti.likeliness = matches;
+        filteredAarti.push(aarti);
+      }
+    }
 
-      // console.log(wordArray, Date.now());
+    if (!filteredAarti.length) {
+      console.log("No aarti found at all.. doing in depth search by keyword");
 
-      // if (
-      //   item.search_txt.filter(
-      //     (_itm) =>
-      //       wordArray.filter((word) => _itm.startsWith(word)).length <=
-      //       wordArray.length
-      //   ).length
-      // ) {
-      //   return true;
-      // }
+      for (let aarti of BOOKLET) {
+        let matched = 0;
 
-      // if (
+        for (let searchText of aarti.search_txt) {
+          for (let word of wordsInSearch) {
+            if (searchText.includes(word)) matched += 1;
+          }
+        }
 
-      //   item.search_txt.filter(
-      //     (val_from_db) =>
-      //       wordArray.filter((word) => val_from_db.startsWith(word)).length
-      //   ).length
-      // )
-      //   return true;
+        if (matched) {
+          aarti.likeliness = matched;
+          filteredAarti.push(aarti);
+        }
+      }
+    }
 
-      // if (item.search_txt.filter((_val) => wordArray.indexOf(_val)  >= 0 ).length) return true;
+    filteredAarti.sort((a, b) => (a.likeliness < b.likeliness ? 1 : -1));
 
-      if (
-        item.search_txt.filter(
-          (_itm) => wordArray.filter((_word) => _itm.includes(_word)).length
-        ).length
-      )
-        return true;
-    });
+    console.log(
+      filteredAarti.map((itm) => `${itm.number}: \t ${itm.likeliness}`)
+    );
 
-    setItems(matches);
+    setItems(filteredAarti);
   };
 
   return (
@@ -132,6 +155,9 @@ const BookletScreen = ({ route, navigation }) => {
             inputContainerStyle={{
               backgroundColor: "white",
               padding: normalize(2),
+              borderColor: "#85929E",
+              borderWidth: 1,
+              borderBottomWidth: 1,
             }}
             placeholderTextColor={"#85929E"}
             placeholder={"Search Here.."}
